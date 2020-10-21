@@ -8,13 +8,12 @@
 # which is distributed along with this program.
 # -----------------------------------------------------------------------------
 
-import config
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
 class CAES(object):
-    def __init__(self):
+    def __init__(self,config):
         self.config = config
         self.time = np.arange(0,self.config.TIME_END+1,
                                     self.config.TIME_STEP)

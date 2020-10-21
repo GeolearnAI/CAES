@@ -8,11 +8,11 @@
 # which is distributed along with this program.
 # -----------------------------------------------------------------------------
 
-
-from caes import CAES
+from params import config
+from caes.core import CAES
 import matplotlib.pyplot as plt
 
-test = CAES()
+test = CAES(config)
 test.plot_injection_extraction()
 plt.plot(test.calculate_air_density())
 plt.show()

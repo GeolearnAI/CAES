@@ -13,8 +13,8 @@
 
 import numpy as np
 #Path to files with extraction and injection schedule
-INJECTION_FILE = 'injection_schedule.csv'
-EXTRACTION_FILE = 'extraction_schedule.csv'
+INJECTION_FILE = 'data/injection_schedule.csv'
+EXTRACTION_FILE = 'data/extraction_schedule.csv'
 
 #From Table 2 of Zhou's article - Parameters for Pilot CAES test in Kamioka
 
