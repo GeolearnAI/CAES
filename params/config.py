@@ -41,11 +41,12 @@ GAS_COMPRESSIBILITY_FACTOR = 1 #Z
 
 #Other experiment variables
 
-RESERVOIR_RADIUS = np.sqrt((ROCK_PERMEABILITY * 
-                            RESERVOIR_EDGE_AIR_PRESSURE * 5000000)/(
-                                ROCK_POROSITY * AIR_VISCOSITY))
+
 # RESERVOIR_RADIUS = 500
 #CALCULATION PARAMETERS
 TIME_STEP = 1 #sec.
 TIME_END = 720*60 #sec
 
+RESERVOIR_RADIUS = np.sqrt((ROCK_PERMEABILITY * 
+                            RESERVOIR_EDGE_AIR_PRESSURE * TIME_END*40)/(
+                                ROCK_POROSITY * AIR_VISCOSITY))

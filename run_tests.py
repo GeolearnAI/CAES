@@ -10,17 +10,11 @@
 
 from params import config
 from caes.core import CAES
-import matplotlib.pyplot as plt
 
 test = CAES(config)
 test.plot_injection_extraction()
-plt.plot(test.calculate_air_density())
-plt.show()
-plt.plot(test.calculate_temperature())
-plt.show()
-plt.plot(test.calculate_pressure())
-plt.show()
-plt.plot(test.calculate_leakage())
-plt.show()
+test.plot_pressure(test.calculate_pressure())
+test.plot_temperature(test.calculate_temperature())
+test.plot_leakage(test.calculate_leakage())
 test.start_workflow()
 

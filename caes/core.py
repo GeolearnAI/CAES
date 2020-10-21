@@ -44,13 +44,33 @@ class CAES(object):
     
     def plot_injection_extraction(self):
         fig,ax = plt.subplots()
-        ax.plot(self.time, self.mi, 'b-')
-        ax.plot(self.time, self.me, 'r--')
-        ax.set_xlabel('time (s)')
+        ax.plot(self.time/3600, self.mi, 'b-')
+        ax.plot(self.time/3600, self.me, 'r--')
+        ax.set_xlabel('time (h)')
         ax.set_ylabel('mass rate (kg/s)')
         plt.legend(['injection', 'extraction'], loc='best')
         plt.show()
+    
+    def plot_temperature(self,temperature):
+        fig,ax = plt.subplots()
+        ax.plot(self.time/3600, temperature, 'b-')
+        ax.set_xlabel('time (h)')
+        ax.set_ylabel('Temperature (kg/s)')
+        plt.show()
         
+    def plot_pressure(self,pressure):
+        fig,ax = plt.subplots()
+        ax.plot(self.time/3600, pressure * 1e-6, 'b-')
+        ax.set_xlabel('time (h)')
+        ax.set_ylabel('Pressure (Mpa)')
+        plt.show()
+        
+    def plot_leakage(self,leakage):
+        fig,ax = plt.subplots()
+        ax.plot(self.time/3600, leakage, 'b-')
+        ax.set_xlabel('time (h)')
+        ax.set_ylabel('Leakage rate (kg/s)')
+        plt.show()
 
     def calculate_air_density(self, leakage_rate = 0):
         """
@@ -60,9 +80,12 @@ class CAES(object):
         temp2 = np.cumsum(self.me*self.config.TIME_STEP)
         temp3 = np.cumsum(leakage_rate * self.config.TIME_STEP)
         
-        return self.config.INITIAL_AIR_DENSITY + (temp1 + temp2 -
+        rho =  self.config.INITIAL_AIR_DENSITY + (temp1 + temp2 -
                                       temp3) / self.config.CAVERN_VOLUME
-    
+        rho[rho < self.config.INITIAL_AIR_DENSITY] = (
+                                self.config.INITIAL_AIR_DENSITY)
+        
+        return rho
     
     def calculate_temperature(self, leakage_rate=0, original_solution = False):
         """
@@ -79,15 +102,15 @@ class CAES(object):
                                 self.config.CAVERN_SURFACE_AREA * 
                                 self.config.CAVERN_WALL_TEMPERATURE)
         alpha /= (self.mi * (self.config.SPECIFIC_AIR_CONSTANT - 
-                                    self.config.AIR_PRESSURE_SPECIFIC_HEAT) -    
-                         (-self.me - ml) * 
+                                    self.config.AIR_PRESSURE_SPECIFIC_HEAT) +    
+                         (self.me - ml) * 
                          self.config.SPECIFIC_AIR_CONSTANT - 
                          self.config.HEAT_TRANSFER_COEFF * 
                          self.config.CAVERN_SURFACE_AREA)
         
         beta = self.mi * (self.config.SPECIFIC_AIR_CONSTANT - 
                               self.config.AIR_PRESSURE_SPECIFIC_HEAT)
-        beta += (-self.me - ml) * self.config.SPECIFIC_AIR_CONSTANT
+        beta += (self.me - ml) * self.config.SPECIFIC_AIR_CONSTANT
         beta -= (self.config.HEAT_TRANSFER_COEFF * 
                  self.config.CAVERN_SURFACE_AREA)
         beta /= (self.config.CAVERN_VOLUME * 
@@ -105,7 +128,8 @@ class CAES(object):
                self.config.SPECIFIC_AIR_CONSTANT * 
                self.calculate_temperature(leakage_rate, original_solution))
         #add condition from step 9 of Zhou's workflow
-        p[p < 0] = self.config.RESERVOIR_EDGE_AIR_PRESSURE
+        p[p < self.config.RESERVOIR_EDGE_AIR_PRESSURE] = (
+                                self.config.RESERVOIR_EDGE_AIR_PRESSURE)
         return p
     
     def calculate_leakage(self, leakage_rate = 0, original_solution = False):
@@ -113,7 +137,7 @@ class CAES(object):
         From equation 8 of Zhou's article
         """
 
-        num = (1.0697e-2 * self.config.ROCK_PERMEABILITY * 
+        num = (1.0967e-2 * self.config.ROCK_PERMEABILITY * 
                self.config.CAVERN_LENGTH * 
                (self.calculate_pressure(leakage_rate,original_solution)**2 - 
                                 self.config.RESERVOIR_EDGE_AIR_PRESSURE**2))
@@ -171,12 +195,12 @@ class CAES(object):
         i=1
         while delta >= 1:
             temp = self.calculate_leakage(ml)
-            plt.plot(temp)
-            plt.show()
-            plt.plot(self.calculate_temperature(ml))
-            plt.show()
-            plt.plot(self.calculate_pressure(ml))
-            plt.show()
+            # plt.plot(temp)
+            # plt.show()
+            # plt.plot(self.calculate_temperature(ml))
+            # plt.show()
+            # plt.plot(self.calculate_pressure(ml))
+            # plt.show()
             delta = np.mean(np.abs(temp - ml))*100
             print('Adjustment iteration no.{}'.format(str(i)))
             print('Error is {}%'.format(str(delta)))
