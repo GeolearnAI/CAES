@@ -19,13 +19,13 @@ class CAES(object):
                                     self.config.TIME_STEP)
         self.mi = self.discretize_injection_rate()
         self.me = self.discretize_extraction_rate()
+        self.total_leakage = 0
 
     def discretize_injection_rate(self):
         """
        Change injection function form .csv file to
             array of injection rate at a regular time step       
         """
-
         data = np.loadtxt(self.config.INJECTION_FILE, delimiter = ';')
         f = interp1d(data[:,0], data[:,1], bounds_error = False,
                                                  fill_value = data[-1,1])
@@ -51,11 +51,12 @@ class CAES(object):
         plt.legend(['injection', 'extraction'], loc='best')
         plt.show()
     
-    def plot_temperature(self,temperature):
+    def plot_temperature(self,temperature,i):
         fig,ax = plt.subplots()
         ax.plot(self.time/3600, temperature, 'b-')
         ax.set_xlabel('time (h)')
         ax.set_ylabel('Temperature (kg/s)')
+        ax.set_title('Itération ' + str(i))
         plt.show()
         
     def plot_pressure(self,pressure):
@@ -82,6 +83,7 @@ class CAES(object):
         
         rho =  self.config.INITIAL_AIR_DENSITY + (temp1 + temp2 -
                                       temp3) / self.config.CAVERN_VOLUME
+        #condition to prevent density<0
         rho[rho < self.config.INITIAL_AIR_DENSITY] = (
                                 self.config.INITIAL_AIR_DENSITY)
         
@@ -164,7 +166,7 @@ class CAES(object):
 #         Initial estimation
 # =============================================================================
         
-        ml = self.calculate_leakage()
+        self.ml = self.calculate_leakage()
         
 # =============================================================================
 #         #Basic iteration
@@ -174,17 +176,18 @@ class CAES(object):
         delta = 1
         i = 1
         while delta >= 1:
-            temp = self.calculate_leakage(ml, original_solution = True)
-            plt.plot(temp)
-            plt.show()
-            plt.plot(self.calculate_temperature(ml, True))
-            plt.show()
-            plt.plot(self.calculate_pressure(ml, True))
-            plt.show()
-            delta = np.mean(np.abs(temp - ml)) * 100
+            temp = self.calculate_leakage(self.ml, original_solution = True)
+            # plt.plot(temp)
+            # plt.show()
+            self.plot_temperature(self.calculate_temperature(self.ml, True),i)
+            # plt.show()
+            self.plot_pressure(self.calculate_pressure(self.ml, True))
+            # plt.show()
+            delta = np.mean(np.abs(temp - self.ml)) * 100
             print('Basic iteration no.{}'.format(str(i)))
             print('Error is {}%'.format(str(delta)))
-            ml = temp
+            self.ml = temp
+            self.total_leakage = np.sum(self.ml/self.config.TIME_STEP)
             i+=1
             
 # =============================================================================
@@ -194,17 +197,15 @@ class CAES(object):
         delta=1
         i=1
         while delta >= 1:
-            temp = self.calculate_leakage(ml)
-            # plt.plot(temp)
-            # plt.show()
-            # plt.plot(self.calculate_temperature(ml))
-            # plt.show()
-            # plt.plot(self.calculate_pressure(ml))
-            # plt.show()
-            delta = np.mean(np.abs(temp - ml))*100
+            temp = self.calculate_leakage(self.ml)
+            
+            self.plot_temperature(self.calculate_temperature(self.ml),i)
+            self.plot_pressure(self.calculate_pressure(self.ml))
+            delta = np.mean(np.abs(temp - self.ml))*100
             print('Adjustment iteration no.{}'.format(str(i)))
             print('Error is {}%'.format(str(delta)))
-            ml = temp
+            self.ml = temp
+            self.total_leakage = np.sum(self.ml / self.config.TIME_STEP)
             i+=1
         
         
